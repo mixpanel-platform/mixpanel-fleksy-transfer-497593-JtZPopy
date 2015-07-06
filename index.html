@@ -7,9 +7,42 @@
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
   </head>
   <body class="mixpanel-platform-body">
-    <h1>Hello, World!</h1>
+    <p class="result">Loading...</p>
     <script>
-      // Run queries and display results here
+      var people = {'total': 0, 'count': 0};
+      
+      MP.api.people().done(function(data) {
+        var results = data.values().results,
+            total = data.values().total,
+            session_id = data.values().session_id;
+            
+        for (var profile in results) {
+          if (results[profile].hasOwnProperty('$properties')) {
+            if (results[profile].$properties.hasOwnProperty('Languages #')) {
+              people['total'] += parseInt(results[profile].$properties['Languages #'], 10);
+              people['count'] ++;
+            }
+          }
+        }
+            
+        for (var page = 1; page < parseInt(total/1000); page++) {
+          MP.api.people('session_id': session_id, 'page': page).done(function(newData) {
+            var newResults = newData.values().results;
+            
+            for (var profile in newResults) {
+              if (newResults[profile].hasOwnProperty('$properties')) {
+                if (newResults[profile].$properties.hasOwnProperty('Languages #')) {
+                  people['total'] += parseInt(newResults[profile].$properties['Languages #'], 10);
+                  people['count'] ++;
+                }
+              }
+            }
+          
+          $('.result').text('Average # Languages: ' + people['total']/people['count']);
+            
+          });
+        }
+      });
     </script>
   </body>
 </html>
